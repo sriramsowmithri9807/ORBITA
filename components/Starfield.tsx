@@ -164,9 +164,13 @@ function Rig({ warping }: { warping: boolean }) {
     useFrame((state, delta) => {
         // Camera drift
         if (warping) {
-            state.camera.fov = THREE.MathUtils.lerp(state.camera.fov, 100, delta * 2);
+            if ('fov' in state.camera) {
+                (state.camera as any).fov = THREE.MathUtils.lerp((state.camera as any).fov, 100, delta * 2);
+            }
         } else {
-            state.camera.fov = THREE.MathUtils.lerp(state.camera.fov, 60, delta * 2);
+            if ('fov' in state.camera) {
+                (state.camera as any).fov = THREE.MathUtils.lerp((state.camera as any).fov, 60, delta * 2);
+            }
         }
         state.camera.updateProjectionMatrix();
 
