@@ -139,7 +139,7 @@ export default function AIDecisionLog({ decisions }: AIDecisionLogProps) {
                                                 <div className="bg-orbital-orange/5 p-3 rounded border border-orbital-orange/20">
                                                     <h4 className="text-[10px] font-bold text-orbital-orange mb-1 uppercase tracking-widest">Counterfactual Insight</h4>
                                                     <p className="text-xs text-gray-300 leading-relaxed italic">
-                                                        "{decision.counterfactual_insights}"
+                                                        &quot;{decision.counterfactual_insights}&quot;
                                                     </p>
                                                 </div>
                                             )}

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, Suspense } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
@@ -48,7 +48,7 @@ export default function Dashboard() {
         if (!confirmed) return;
 
         try {
-            await fetch('http://localhost:8001/mission/1/stop', { method: 'POST' });
+            await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8001"}/mission/1/stop`, { method: 'POST' });
             alert("✅ OVERRIDE SUCCESSFUL: AI Autonomy Disengaged.\nManual Control Interface Active.");
         } catch (e) {
             console.warn("Backend unavailable", e);
@@ -90,20 +90,18 @@ export default function Dashboard() {
 
     const getStatusText = () => {
         switch (status) {
-            case 'nominal':
-                return 'All Systems Nominal';
-            case 'warning':
-                return 'Warning - Monitoring';
-            case 'critical':
-                return 'Critical - Action Required';
-            default:
-                return 'Unknown';
+            case 'nominal': return 'All Systems Nominal';
+            case 'warning': return 'Warning - Monitoring';
+            case 'critical': return 'Critical - Action Required';
+            default: return 'Unknown';
         }
     };
 
     return (
         <main className="min-h-screen relative overflow-hidden">
-
+            <div className="fixed inset-0 z-0">
+                <Starfield />
+            </div>
 
             <div className="container mx-auto px-4 py-6 relative z-10">
                 {/* Header */}
@@ -114,181 +112,100 @@ export default function Dashboard() {
                 >
                     <div>
                         <h1 className="text-3xl font-bold text-neon-cyan mb-1">{missionName}</h1>
-                        <p className="text-gray-400">Mission Control Dashboard</p>
-                    </div>
-                    <div className="flex items-center gap-4">
-                        <div className={`px-4 py-2 rounded-lg font-semibold ${status === 'nominal' ? 'bg-status-nominal/20 text-status-nominal' :
-                            status === 'warning' ? 'bg-status-warning/20 text-status-warning' :
-                                'bg-status-critical/20 text-status-critical'
-                            }`}>
+                        <p className="text-gray-400 text-sm flex items-center gap-2">
+                            Satellite ID: ORBITA-0{missionId.slice(-1)} | {satelliteType} Orbit
+                            <span className={`inline-block w-2 h-2 rounded-full ml-2 ${status === 'nominal' ? 'bg-status-nominal' : status === 'warning' ? 'bg-status-warning' : 'bg-status-critical'} animate-pulse`} />
                             {getStatusText()}
-                        </div>
-                        <div className={`w-4 h-4 rounded-full animate-pulse ${status === 'nominal' ? 'bg-status-nominal' :
-                            status === 'warning' ? 'bg-status-warning' :
-                                'bg-status-critical'
-                            }`} />
+                        </p>
+                    </div>
+                    <div className="flex gap-4">
+                        <button
+                            onClick={handleDownloadTelemetry}
+                            className="px-4 py-2 bg-white/5 border border-white/10 hover:bg-white/10 rounded transition-colors text-sm"
+                        >
+                            EXPORT LOGS
+                        </button>
+                        <button
+                            onClick={handleEmergencyOverride}
+                            className="px-4 py-2 bg-status-critical/20 border border-status-critical/50 hover:bg-status-critical/30 text-status-critical rounded transition-colors text-sm font-bold"
+                        >
+                            EMERGENCY OVERRIDE
+                        </button>
                     </div>
                 </motion.div>
 
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    {/* Left column - Orbit Visualization */}
-                    <motion.div
-                        initial={{ opacity: 0, x: -20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ delay: 0.2 }}
-                        className="lg:col-span-2"
-                    >
-                        <div className="glass-panel p-6 h-[500px]">
-                            <h2 className="text-xl font-semibold text-neon-cyan mb-4">Orbit Visualization</h2>
-                            <Suspense fallback={<div>Loading...</div>}>
-                                <OrbitVisualization satelliteType={satelliteType} />
-                            </Suspense>
-                        </div>
-                    </motion.div>
-
-                    {/* Right column - Mission Info */}
-                    <motion.div
-                        initial={{ opacity: 0, x: 20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ delay: 0.3 }}
-                        className="space-y-4"
-                    >
-                        <div className="glass-panel p-6">
-                            <h3 className="text-lg font-semibold text-neon-cyan mb-4">Mission Parameters</h3>
-                            <div className="space-y-3 text-sm">
-                                <div className="flex justify-between">
-                                    <span className="text-gray-400">Satellite Type:</span>
-                                    <span className="text-white font-semibold">{satelliteType}</span>
-                                </div>
-                                <div className="flex justify-between">
-                                    <span className="text-gray-400">Mission Duration:</span>
-                                    <span className="text-white font-semibold">
-                                        {new Date().toLocaleTimeString()}
-                                    </span>
-                                </div>
-                                <div className="flex justify-between">
-                                    <span className="text-gray-400">Orbit Period:</span>
-                                    <span className="text-white font-semibold">92.5 min</span>
-                                </div>
-                                <div className="flex justify-between">
-                                    <span className="text-gray-400">Altitude:</span>
-                                    <span className="text-white font-semibold">408 km</span>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className="glass-panel p-6">
-                            <h3 className="text-lg font-semibold text-neon-cyan mb-4">Quick Actions</h3>
-                            <div className="space-y-2">
-                                <button
-                                    onClick={() => router.push('/operations')}
-                                    className="w-full px-4 py-2 bg-red-600/20 text-red-500 border border-red-600/50 rounded-lg 
-                                 hover:bg-red-600/30 transition-all text-sm font-bold tracking-wider animate-pulse">
-                                    ⚠️ ENTER OPS CENTER
-                                </button>
-                                <button
-                                    onClick={handleEmergencyOverride}
-                                    className="w-full px-4 py-2 bg-neon-cyan/20 text-neon-cyan rounded-lg 
-                                 hover:bg-neon-cyan/30 transition-colors text-sm">
-                                    Emergency Override
-                                </button>
-                                <button
-                                    onClick={() => router.push('/report')}
-                                    className="w-full px-4 py-2 bg-orbital-orange/20 text-orbital-orange rounded-lg 
-                                 hover:bg-orbital-orange/30 transition-colors text-sm">
-                                    Generate Report
-                                </button>
-                                <button
-                                    onClick={() => router.push('/ai-test')}
-                                    className="w-full px-4 py-2 bg-neon-purple/20 text-neon-purple rounded-lg 
-                                 hover:bg-neon-purple/30 transition-colors text-sm">
-                                    Test AI Logic
-                                </button>
-                                <button
-                                    onClick={handleDownloadTelemetry}
-                                    className="w-full px-4 py-2 bg-white/10 text-white rounded-lg 
-                                 hover:bg-white/20 transition-colors text-sm">
-                                    Download Telemetry
-                                </button>
-                            </div>
-                        </div>
-                    </motion.div>
+                {/* Dashboard Grid */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                    <TelemetryCard
+                        title="Power System"
+                        value={telemetry?.battery ?? 0}
+                        unit="%"
+                        status={status}
+                        trend="down"
+                        icon="🔋"
+                    />
+                    <TelemetryCard
+                        title="Thermal State"
+                        value={telemetry?.thermal ?? 0}
+                        unit="°C"
+                        status={status}
+                        trend="up"
+                        icon="🌡️"
+                    />
+                    <TelemetryCard
+                        title="Signal Latency"
+                        value={telemetry?.signalLatency ?? 0}
+                        unit="ms"
+                        status={status}
+                        trend="up"
+                        icon="📡"
+                    />
+                    <TelemetryCard
+                        title="ADCS Stability"
+                        value={telemetry ? 99.8 : 0}
+                        unit="%"
+                        status={status}
+                        trend="stable"
+                        icon="🧭"
+                    />
                 </div>
 
-                {/* Telemetry Cards */}
-                <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.4 }}
-                    className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mt-6"
-                >
-                    {telemetry && (
-                        <>
-                            <TelemetryCard
-                                title="Battery Level"
-                                value={telemetry.battery}
-                                unit="%"
-                                status={telemetry.battery < 30 ? 'critical' : telemetry.battery < 50 ? 'warning' : 'nominal'}
-                                trend={telemetry.battery > 50 ? 'stable' : 'down'}
-                            />
-                            <TelemetryCard
-                                title="Thermal"
-                                value={telemetry.thermal}
-                                unit="°C"
-                                status={telemetry.thermal > 60 ? 'critical' : telemetry.thermal > 45 ? 'warning' : 'nominal'}
-                                trend={telemetry.thermal < 30 ? 'stable' : 'up'}
-                            />
-                            <TelemetryCard
-                                title="Orientation"
-                                value={`${telemetry.orientation.roll.toFixed(0)}°`}
-                                unit="Roll"
-                                status="nominal"
-                                trend="stable"
-                            />
-                            <TelemetryCard
-                                title="Signal Latency"
-                                value={telemetry.signalLatency}
-                                unit="ms"
-                                status={telemetry.signalLatency > 400 ? 'critical' : telemetry.signalLatency > 300 ? 'warning' : 'nominal'}
-                                trend={telemetry.signalLatency < 200 ? 'stable' : 'up'}
-                            />
-                        </>
-                    )}
-                </motion.div>
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-[500px]">
+                    {/* Main Visualization Area */}
+                    <div className="lg:col-span-2 glass-panel relative p-1">
+                        <div className="absolute top-4 left-4 z-20">
+                            <h3 className="text-neon-cyan text-xs font-mono font-bold tracking-widest uppercase mb-1">Live Orbit Projection</h3>
+                            <div className="text-[10px] text-gray-500 uppercase">T+ 04:22:15 // Epoch: J2000</div>
+                        </div>
+                        <div className="absolute bottom-4 right-4 z-20 flex gap-2">
+                            <button onClick={() => router.push('/operations')} className="px-3 py-1 bg-neon-cyan/80 text-black text-[10px] font-bold rounded hover:bg-neon-cyan transition-colors">
+                                OPS CENTER
+                            </button>
+                        </div>
+                        <OrbitVisualization satelliteType={satelliteType} />
+                    </div>
 
-                {/* AI Decision Log & Timeline */}
-                <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.5 }}
-                    className="mt-6"
-                >
-                    <div className="glass-panel p-6">
-                        <div className="flex items-center justify-between mb-6">
-                            <h2 className="text-xl font-semibold text-neon-cyan">Mission Data</h2>
-                            <div className="flex gap-2">
+                    {/* AI Decision Log / Timeline */}
+                    <div className="glass-panel flex flex-col">
+                        <div className="p-4 border-b border-white/10 flex items-center justify-between">
+                            <div className="flex gap-4">
                                 <button
                                     onClick={() => setActiveTab('ai-log')}
-                                    className={`px-4 py-2 rounded-lg transition-colors ${activeTab === 'ai-log'
-                                        ? 'bg-neon-cyan text-space-black font-semibold'
-                                        : 'bg-white/10 text-gray-400 hover:bg-white/20'
-                                        }`}
+                                    className={`text-xs font-bold tracking-widest transition-colors ${activeTab === 'ai-log' ? 'text-neon-cyan' : 'text-gray-500 hover:text-gray-300'}`}
                                 >
-                                    AI Decision Log
+                                    AI DECISIONS
                                 </button>
                                 <button
                                     onClick={() => setActiveTab('timeline')}
-                                    className={`px-4 py-2 rounded-lg transition-colors ${activeTab === 'timeline'
-                                        ? 'bg-neon-cyan text-space-black font-semibold'
-                                        : 'bg-white/10 text-gray-400 hover:bg-white/20'
-                                        }`}
+                                    className={`text-xs font-bold tracking-widest transition-colors ${activeTab === 'timeline' ? 'text-neon-cyan' : 'text-gray-500 hover:text-gray-300'}`}
                                 >
-                                    Mission Timeline
+                                    TIMELINE
                                 </button>
                             </div>
+                            <div className="w-2 h-2 rounded-full bg-status-nominal animate-pulse" />
                         </div>
 
-                        <div className="max-h-[600px] overflow-y-auto pr-2">
+                        <div className="flex-1 overflow-y-auto p-4 scrollbar-hide">
                             {activeTab === 'ai-log' ? (
                                 <AIDecisionLog decisions={aiDecisions} />
                             ) : (
@@ -296,7 +213,7 @@ export default function Dashboard() {
                             )}
                         </div>
                     </div>
-                </motion.div>
+                </div>
             </div>
         </main>
     );

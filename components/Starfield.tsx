@@ -228,7 +228,7 @@ export default function Starfield() {
             </div>
 
             <div className="absolute bottom-4 left-4 text-[10px] text-white/30 font-mono">
-                COORDINATES: {seed.toString(16).toUpperCase()} // SYSTEM_STATUS: {warping ? 'HYPERDRIVE' : 'NOMINAL'}
+                COORDINATES: {seed.toString(16).toUpperCase()} {"//"} SYSTEM_STATUS: {warping ? 'HYPERDRIVE' : 'NOMINAL'}
             </div>
         </div>
     );

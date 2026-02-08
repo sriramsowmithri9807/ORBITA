@@ -104,7 +104,7 @@ export default function OperationsCenter() {
         ]);
 
         // Fetch Forecast
-        fetch('http://localhost:8001/mission/1/forecast')
+        fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8001"}/mission/1/forecast`)
             .then(res => res.json())
             .then(data => setForecast(data))
             .catch(err => console.error("Forecast unavailable", err));
@@ -282,7 +282,7 @@ export default function OperationsCenter() {
                         </div>
 
                         <div className="bg-black/80 px-4 py-2 text-[9px] text-gray-500 border-t border-white/5 uppercase tracking-tighter">
-                            Hint: Try 'CAM_CAPTURE' or 'ADCS_STATUS'
+                            Hint: Try &apos;CAM_CAPTURE&apos; or &apos;ADCS_STATUS&apos;
                         </div>
 
                         <form onSubmit={handleCommand} className="p-4 border-t border-white/10 bg-black/20">

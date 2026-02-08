@@ -30,7 +30,7 @@ export default function Report() {
         const fetchReport = async () => {
             try {
                 // Try to fetch from backend
-                const res = await fetch('http://localhost:8001/mission/1/report');
+                const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8001"}/mission/1/report`);
                 if (res.ok) {
                     const data = await res.json();
 
